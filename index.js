@@ -5,29 +5,86 @@ const API_URL = "https://instagram-downloader-api.milancodess.repl.co/";
 const {videoDownloader} = require('./request')
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, {
-    polling: true
+    polling: {
+        interval: 300,
+        autoStart: true,
+        params:{
+            timeout: 10
+        }
+    }
 })
 console.log("Бот запущен...");
 
 
 bot.on('message',  async (msg) =>{
-    const chatId = msg.chat.id
-    try {
-        await bot.sendMessage(chatId, "👋 Привет! Отправьте мне ссылку на видео из Instagram, и я загружу его для вас.");
-        if(msg.text && msg.text.includes('instagram.com')){
-          const loadingMessage = await bot.sendMessage(chatId, "⏳ Подождите, загружаю ваше видео...");
-            const getVideoUrl = await videoDownloader(msg.text)
-            await bot.sendVideo(chatId, getVideoUrl.videoUrl, {
-                caption: getVideoUrl.caption + `\n Разработчик: @ecosyst_uz`
-            })
-            await bot.deleteMessage(chatId, loadingMessage.message_id);
-        }
-    }
-    catch (error){
-        console.log(error)
-        bot.sendMessage(chatId, "⚠ Произошла ошибка при загрузке видео. Попробуйте позже.");
-    }
+  if(msg.text === '/instagram'){
+      const chatId = msg.chat.id
+      try {
+          await bot.sendMessage(chatId, "👋 Привет! Отправьте мне ссылку на видео из Instagram, и я загружу его для вас.");
+          if(msg.text && msg.text.includes('instagram.com')){
+              const loadingMessage = await bot.sendMessage(chatId, "⏳ Подождите, загружаю ваше видео...");
+              const getVideoUrl = await videoDownloader(msg.text)
+              await bot.sendVideo(chatId, getVideoUrl.videoUrl, {
+                  caption: getVideoUrl.caption + `\n Разработчик: @ecosyst_uz`
+              })
+              await bot.deleteMessage(chatId, loadingMessage.message_id);
+          }
+      }
+      catch (error){
+          console.log(error)
+          bot.sendMessage(chatId, "⚠ Произошла ошибка при загрузке видео. Попробуйте позже.");
+      }
+  }
 
+})
+
+bot.on('message', msg =>{
+    const chatId = msg.chat.id
+    const userName = msg.chat.first_name
+    const htmlText = `
+<b>👋Привет! ${userName}</b>
+    <b>Добро пожаловать на наш бот для скачивания видео из Инстаграма</b>
+    <i>Отправьте мне ссылку на видео из Instagram, и я загружу его для вас за один клик."</i>
+    `
+    if(msg.text === '/start'){
+        bot.sendMessage(chatId, htmlText, {
+            parse_mode: 'HTML',
+            reply_markup:{
+                inline_keyboard: [
+                    [
+                        {
+                            text: 'Скачать видео из Инстаграма 📲',
+                            callback_data: 'insta_download'
+                        }
+                    ]
+                ]
+            }
+        })
+    }
+})
+
+bot.on('callback_query', async (query)=>{
+    const chatId = query.message.chat.id
+        const data = query.data
+   try{
+       if(data === 'insta_download'){
+           await bot.sendMessage(chatId, "Отправьте мне ссылку на видео из Instagram, и я загружу его для вас.")
+          bot.on('message', async function (msg){
+              if(msg.text && msg.text.includes('instagram.com')) {
+                  const loadingMessage = await bot.sendMessage(chatId, "⏳ Подождите, загружаю ваше видео...");
+                  const getVideoUrl = await videoDownloader(msg.text)
+                  await bot.sendVideo(chatId, getVideoUrl.videoUrl, {
+                      caption: getVideoUrl.caption + `\n Разработчик: @ecosyst_uz`
+                  })
+                  await bot.deleteMessage(chatId, loadingMessage.message_id);
+              }
+          })
+       }
+       bot.answerCallbackQuery(query.id);
+   }
+   catch (error){
+        console.log(error + 'xaminmi')
+   }
 })
 
 
