@@ -1,5 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api')
 const axios = require("axios");
+const fs = require('fs')
 const TELEGRAM_BOT_TOKEN = '8152393354:AAFnxdyIIBXnyPSVju3heLWTJHT3oreMDDU'
 const API_URL = "https://instagram-downloader-api.milancodess.repl.co/";
 const {videoDownloader} = require('./request')
@@ -90,6 +91,32 @@ bot.on('callback_query', async (query)=>{
 })
 
 
+bot.onText(/\/audio/,  async (msg) =>{
+   await bot.sendMessage(msg.chat.id, "Sending mp3...")
+    await bot.sendAudio(msg.chat.id, './audoi/mp4.m4a')
+    await bot.sendMessage(msg.chat.id, "Successfully received")
+    await bot.deleteMessage(msg.chat.id, audioText.message_id)
+   //  fs.readFile(__dirname + './audoi/mp4.m4a', (err, data)=>{
+   //      console.log(data + "test")
+   //      bot.sendAudio(msg.chat.id, data).then(()=>{
+   //          bot.sendMessage(msg.chat.id, 'updated finished')
+   //      })
+   //  })
+})
+
+
+// bot.onText(/\/location/, msg=>{
+//     bot.sendLocation(msg.chat.id, 39.772177, 64.409579)
+// })
+// 39.772177, 64.409579
+
+//send contact to user
+// bot.onText(/\/contact/, msg=>{
+//     bot.sendContact(msg.chat.id, "998336602121", "Karimov Temur")
+// })
+
+
+
 // bot.onText(/\/start/, (msg) => {
 //     const chatId = msg.chat.id;
 //     bot.sendMessage(chatId, "👋 Привет! Отправьте мне ссылку на видео из Instagram, и я загружу его для вас.");
@@ -123,3 +150,49 @@ bot.on('callback_query', async (query)=>{
 //         bot.sendMessage(chatId, "❓ Пожалуйста, отправьте ссылку на видео из Instagram.");
 //     }
 // });
+
+
+//398062629:TEST:999999999_F91D8F69C042267444B74CC0B3C747757EB0E065
+
+bot.onText(/\/payment/, msg=>{
+    const chatId = msg.chat.id
+    bot.sendInvoice(
+        chatId,
+        "Instagram Video Downloader pro",
+        "Download videos unlimited time and faster",
+        'payload',
+        "398062629:TEST:999999999_F91D8F69C042267444B74CC0B3C747757EB0E065",
+        "UZS",
+        [
+            {
+                label: "Subscribe for month",
+                amount: 10000000
+            }
+        ],
+        {
+            photo_url: "https://www.iphones.ru/wp-content/uploads/2024/03/telegram-mods.jpg",
+            need_name: true,
+            is_flexible: true
+
+        }
+
+    )
+})
+
+bot.on("shipping_query", query=>{
+    bot.answerShippingQuery(query.id, true, [
+        {
+            id: "Delivery standart",
+            title: "Стандартная доставка",
+        }
+    ])
+})
+
+bot.on("pre_checkout_query", (query)=>{
+    bot.answerPreCheckoutQuery(query.id, true).catch(console.error)
+})
+
+bot.on("successful_payment", (msg)=>{
+    console.log("Успешный платеж:", msg.successful_payment);
+    bot.sendMessage(msg.chat.id, "Спасибо за покупку! Ваш заказ обработан.");
+})
